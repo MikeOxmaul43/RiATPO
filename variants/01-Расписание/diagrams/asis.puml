@@ -1,0 +1,15 @@
+@startuml asis
+title AS-IS. <название процесса>
+
+|Роль|
+start
+:Шаг;
+if (Условие?) then (нет)
+  :Отказ;
+  stop
+else (да)
+endif
+:Результат;
+stop
+
+@enduml

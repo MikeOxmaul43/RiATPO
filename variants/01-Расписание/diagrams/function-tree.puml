@@ -1,0 +1,13 @@
+@startuml function-tree
+title Дерево функций. <название>
+
+left to right direction
+
+rectangle "корневая функция" as root
+rectangle "ветвь" as branch
+rectangle "лист" as leaf
+
+root --> branch
+branch --> leaf
+
+@enduml
