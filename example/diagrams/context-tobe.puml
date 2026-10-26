@@ -1,0 +1,29 @@
+@startuml context-tobe
+title Контекст TO-BE. Заказ справки об обучении
+
+actor "Студент" as Student
+actor "Секретарь\nдеканата" as Secretary
+
+rectangle "Учёт\nконтингента" as Accounting
+rectangle "Сервис электронной\nподписи организации" as Sign
+
+rectangle "Личный кабинет.\nСправки" as LK
+
+Student --> LK : вид справки\nи адресат
+LK --> Student : файл справки\nили причина отказа
+LK --> Accounting : запрос статуса\nобучающегося
+Accounting --> LK : числится\nили не числится
+LK --> Sign : PDF на подпись
+Sign --> LK : подписанный PDF
+Secretary --> LK : подтвердить\nили отклонить с причиной
+LK --> Secretary : заявка\n«на рассмотрении»
+
+note right of LK
+  Типовая справка об обучении
+  до секретаря не доходит.
+  Декан в этот контур не входит:
+  на бумажном пути он остаётся
+  только в модели AS-IS.
+end note
+
+@enduml

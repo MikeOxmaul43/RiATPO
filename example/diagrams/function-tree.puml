@@ -1,0 +1,36 @@
+@startuml function-tree
+title Дерево функций. Выдать справку об обучении
+
+left to right direction
+
+rectangle "Выдать справку\nоб обучении" as root
+rectangle "Принять заявку\nна вид и адресата" as accept
+rectangle "Проверить, что\nстудент числится" as status
+rectangle "Определить\nветвь выдачи" as branch
+rectangle "Показать отказ, если\nстудент не числится" as refuse
+
+rectangle "Выдать типовую\nсправку автоматически" as auto
+rectangle "Передать заявку\nвне перечня секретарю" as manual
+
+rectangle "Собрать PDF\nпо шаблону" as pdf
+rectangle "Подписать электронной\nподписью организации" as sign
+rectangle "Положить файл\nв личный кабинет" as file
+rectangle "Записать выдачу\nв журнал" as journal
+
+rectangle "Подтвердить\nи выдать файл" as confirm
+rectangle "Отклонить\nс причиной" as reject
+
+root --> accept
+root --> status
+root --> branch
+root --> refuse
+branch --> auto
+branch --> manual
+auto --> pdf
+auto --> sign
+auto --> file
+auto --> journal
+manual --> confirm
+manual --> reject
+
+@enduml
