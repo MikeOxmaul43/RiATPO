@@ -1,0 +1,13 @@
+@startuml context
+title Контекст. <название системы>
+
+actor "Роль" as Role
+rectangle "Смежная система" as External
+rectangle "<Система>" as System
+
+Role --> System : что передаёт
+System --> Role : что возвращает
+System --> External : запрос
+External --> System : ответ
+
+@enduml
