@@ -1,13 +1,46 @@
 @startuml function-tree
-title Дерево функций. <название>
+title Дерево функций. Сформировать расписание занятий
 
 left to right direction
 
-rectangle "корневая функция" as root
-rectangle "ветвь" as branch
-rectangle "лист" as leaf
+rectangle "Сформировать\nрасписание занятий" as root
 
-root --> branch
-branch --> leaf
+rectangle "Получить данные\nиз корпоративных\nсистем" as data
+rectangle "Сформировать\nи редактировать\nрасписание" as schedule
+rectangle "Анализировать\nзагруженность\nресурсов" as load
+rectangle "Опубликовать\nрасписание\nв MAX" as publish
+
+rectangle "Проверить полноту\nисходных данных" as check_data
+rectangle "Загрузить данные о\nпреподавателях, группах,\nаудиториях, нагрузке" as load_data
+
+rectangle "Разместить занятие\n(дисциплина, тип, время,\nгруппа, аудитория, преп.)" as place
+rectangle "Проверить конфликты\n(преподаватель / группа /\nаудитория)" as conflict
+rectangle "Разрешить конфликт\nвручную" as resolve
+
+rectangle "Просмотреть загрузку\nпреподавателей" as teacher_load
+rectangle "Просмотреть загрузку\nаудиторий" as room_load
+
+rectangle "Подготовить данные\nв формате MAX" as prepare_max
+rectangle "Передать расписание\nв MAX" as send_max
+rectangle "Уведомить об\nизменениях" as notify
+
+root --> data
+root --> schedule
+root --> load
+root --> publish
+
+data --> check_data
+data --> load_data
+
+schedule --> place
+schedule --> conflict
+schedule --> resolve
+
+load --> teacher_load
+load --> room_load
+
+publish --> prepare_max
+publish --> send_max
+publish --> notify
 
 @enduml
