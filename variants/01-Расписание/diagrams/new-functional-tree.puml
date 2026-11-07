@@ -1,0 +1,46 @@
+@startuml function-tree
+title Дерево функций. Сформировать расписание занятий
+
+left to right direction
+
+rectangle "Сформировать\nрасписание занятий" as root
+
+rectangle "Получить данные\nиз корпоративных\nсистем" as data
+rectangle "Сформировать\nи редактировать\nрасписание" as schedule
+rectangle "Анализировать\nзагруженность\nресурсов" as load
+rectangle "Опубликовать\nрасписание" as publish
+rectangle "Показать расписание\nпользователю" as show
+
+rectangle "Автоматически\nсоставить\nрасписание" as auto
+rectangle "Разрешить\nконфликт вручную" as resolve
+rectangle "Утвердить\nрасписание" as approve
+rectangle "Изменить\nопубликованное\nрасписание" as change
+
+rectangle "Подготовить данные\nв формате MAX" as prepare_max
+rectangle "Передать расписание\nв MAX" as send_max
+rectangle "Уведомить\nоб изменениях" as notify
+rectangle "Вести журнал\nизменений" as log
+
+rectangle "В MAX" as in_max
+rectangle "В веб-версии" as in_web
+
+root --> data
+root --> schedule
+root --> load
+root --> publish
+root --> show
+
+schedule --> auto
+schedule --> resolve
+schedule --> approve
+schedule --> change
+
+publish --> prepare_max
+publish --> send_max
+publish --> notify
+publish --> log
+
+show --> in_max
+show --> in_web
+
+@enduml
