@@ -1,0 +1,35 @@
+@startuml
+left to right direction
+actor "Диспетчер\nрасписания" as Dispatcher
+actor "Учебное\nуправление" as Office
+actor "Студент" as Student
+actor "Преподаватель" as Teacher
+actor "MAX\n(внешний сервис)" as Max
+actor "Корпоративные\nсистемы" as Corp
+rectangle "Приложение расписания" {
+  usecase "Загрузить данные и\nпроверить полноту" as UC7
+  usecase "Запустить автосоставление\nрасписания" as UC3
+  usecase "Разрешить конфликт\nвручную" as UC2
+  usecase "Подтвердить публикацию" as UC4
+  usecase "Получить актуальное расписание\n(MAX или веб-версия)" as UC1
+  usecase "Изменить опубликованное\nрасписание" as UC5
+  usecase "Просмотреть загруженность\nпреподавателей и аудиторий" as UC6
+  usecase "Записать изменение\nв журнал" as UC8
+  usecase "Уведомить об изменении" as UC9
+}
+Dispatcher --> UC7
+Dispatcher --> UC3
+Dispatcher --> UC2
+Dispatcher --> UC4
+Dispatcher --> UC5
+Dispatcher --> UC6
+Office --> UC6
+Student --> UC1
+Teacher --> UC1
+Corp --> UC7
+Max --> UC4
+Max --> UC9
+UC3 ..> UC2 : include
+UC5 ..> UC8 : include
+UC5 ..> UC9 : include
+@enduml
