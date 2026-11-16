@@ -1,0 +1,71 @@
+@startuml sequence-max-publish
+title КНТ-2. Система «Расписание» публикует расписание в MAX. REST
+
+actor "Диспетчер" as Dispatcher
+participant "Система\n«Расписание»" as App
+participant "MAX\nOpen API" as MAX
+
+Dispatcher -> App : подтвердить публикацию\nутверждённой версии
+
+note over App
+  Версия в статусе «Утверждена».
+  Токен коннектора получен.
+end note
+
+group Пакет публикации (справочники, затем события)
+  App -> MAX : POST /v1/bulk/faculties\nAuthorization: <токен коннектора>\nContent-Type: application/json\n[массив факультетов]
+
+  alt HTTP 2xx
+    MAX --> App : факультеты приняты
+  else HTTP вне 2xx / таймаут (10 с)
+    MAX --> App : ошибка
+    note right of App
+      Публикации нет ни в одном канале.
+      Версия остаётся «Утверждена».
+      Диспетчер видит ошибку — может повторить.
+    end note
+    App --> Dispatcher : ошибка публикации;\nповтор по команде диспетчера
+    return
+  end
+
+  App -> MAX : POST /v1/bulk/groups\n[массив групп]
+  App -> MAX : POST /v1/bulk/buildings\n[массив зданий]
+  App -> MAX : POST /v1/bulk/rooms\n[массив аудиторий]
+  App -> MAX : POST /v1/bulk/teachers\n[массив преподавателей]
+  App -> MAX : POST /v1/bulk/departments\n[массив кафедр]
+
+  note right of MAX
+    Справочники — до событий:
+    события ссылаются на группы,
+    аудитории и преподавателей.
+  end note
+
+  App -> MAX : POST /v1/bulk/events\n[массив занятий, порциями]\nполя: дисциплина, тип, день и время,\nпериод, группа, преподаватель,\nкорпус, аудитория\n(не более 8 полей; персональных\nданных студентов нет)
+
+  alt HTTP 2xx на все вызовы пакета
+    MAX --> App : все данные приняты
+    note right of App
+      Версия «Опубликована».
+      Прежняя версия «Заменена».
+      Веб-версия обновляется.
+    end note
+    App --> Dispatcher : публикация состоялась
+  else HTTP вне 2xx хотя бы на одном вызове
+    MAX --> App : частичный отказ
+    note right of App
+      Публикации нет ни в одном канале.
+      Версия остаётся «Утверждена».
+      Прежняя опубликованная версия действует.
+    end note
+    App --> Dispatcher : ошибка публикации;\nповтор отправляет пакет заново;\nповтор не создаёт дублей занятий
+  else HTTP 401 или 403
+    MAX --> App : токен не принят
+    note right of App
+      Публикации нет.
+      Дежурный узнаёт по НФТ-18.
+    end note
+    App --> Dispatcher : ошибка авторизации
+  end
+end
+
+@enduml
