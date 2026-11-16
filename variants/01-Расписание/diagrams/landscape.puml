@@ -1,0 +1,49 @@
+@startuml landscape
+title Контур систем. Расписание занятий
+
+actor "Диспетчер\nрасписания" as Dispatcher
+actor "Сотрудник\nучебного управления" as Admin
+actor "Студент" as Student
+actor "Преподаватель" as Teacher
+
+node "Система «Расписание»" {
+  component "Бэкенд\n(формирование,\nпубликация,\nуведомления)" as Backend
+  component "Веб-версия\nрасписания" as Web
+  database "Хранилище\n(версия, занятие,\nжурнал, уведомление,\nсопоставление аккаунта,\nзагрузка семестра)" as Store
+}
+
+node "1С:Университет ПРОФ" {
+  component "HTTP-сервисы hs\n(employees_v1,\nstudy_groups,\nDepartment_University,\nlist_curricula,\ndisciplines_departments)" as OneCAPI
+  database "Справочники\n(преподаватели,\nгруппы, аудитории,\nучебные планы,\nнагрузка)" as OneCDB
+}
+
+node "MAX" {
+  component "Open API\n«University schedule»\n1.0.11" as MaxAPI
+  component "Мессенджер\n(отображение\nрасписания\nи уведомлений)" as MaxApp
+}
+
+
+Dispatcher --> Backend : HTTPS
+Admin --> Backend : HTTPS
+
+Backend --> OneCAPI : КНТ-1\nGET справочники\nREST / HTTPS
+OneCAPI --> OneCDB : чтение
+Backend --> Store : чтение / запись
+
+Backend --> MaxAPI : КНТ-2\nPOST bulk-данных\n(расписание)\nREST / HTTPS
+Backend --> MaxAPI : КНТ-3\nPOST уведомление\nоб изменении\nREST / HTTPS
+MaxAPI --> MaxApp : отображение\nи уведомления
+MaxApp --> Student : расписание\nи уведомления
+MaxApp --> Teacher : расписание\nи уведомления
+
+
+note bottom of Backend
+  Система только читает данные
+  из 1С — операций POST, PUT,
+  PATCH, DELETE к 1С нет.
+  Публикация считается
+  состоявшейся только когда
+  MAX принял весь пакет.
+end note
+
+@enduml
