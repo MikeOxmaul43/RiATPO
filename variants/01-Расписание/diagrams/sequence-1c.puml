@@ -1,0 +1,82 @@
+@startuml sequence-1c
+title КНТ-1. Система «Расписание» читает справочники и нагрузку семестра из 1С:Университет ПРОФ. REST
+
+actor "Диспетчер" as Dispatcher
+participant "Система\n«Расписание»" as App
+participant "1С:Университет ПРОФ\n(HTTP-сервисы hs)" as OneC
+
+Dispatcher -> App : запустить загрузку семестра
+
+group Загрузка справочников (5 операций GET)
+  App -> OneC : GET /hs/volgmed_data/Department_University\nAuthorization: Basic <base64>
+  alt HTTP 2xx, error не true, тело разобрано
+    OneC --> App : дерево подразделений,\nаудитории (ВидСтруктуры = «Аудитории»)
+    note right of App
+      Группа данных «Аудитория» получена.
+      Загрузка по этой операции — OK.
+    end note
+  else HTTP вне 2xx, error:true или таймаут (1800 с)
+    OneC --> App : ошибка / нет ответа
+    note right of App
+      Операция недоступна.
+      Аудитории не загружены.
+      По их данным занятия не размещаются.
+    end note
+  end
+
+  App -> OneC : GET /hs/volgmed_data/employees_v1\nAuthorization: Basic <base64>
+  alt HTTP 2xx, error не true, тело разобрано
+    OneC --> App : список сотрудников\n(ФИО, Работа[].Должность, Работа[].Преподаватель)
+    note right of App
+      Группа данных «Преподаватель» получена.
+      Данные рождения, телефон, почта — не сохраняются.
+    end note
+  else ошибка / таймаут (1800 с)
+    OneC --> App : нет годного ответа
+    note right of App
+      Операция недоступна.
+      По данным преподавателей занятия не размещаются.
+    end note
+  end
+
+  App -> OneC : GET /hs/Shedule/study_groups\nAuthorization: Basic <base64>
+  alt HTTP 2xx, groups[] — массив
+    OneC --> App : список учебных групп
+  else ошибка / таймаут (600 с)
+    OneC --> App : нет годного ответа
+    note right of App
+      Группы не загружены.
+      Занятий по группам нет.
+    end note
+  end
+
+  App -> OneC : GET /hs/Shedule/list_curricula\nAuthorization: Basic <base64>
+  alt HTTP 2xx, список планов получен
+    OneC --> App : учебные планы (plan_number, speciality, …)
+    loop для каждого plan_number
+      App -> OneC : GET /hs/Shedule/disciplines_departments?number={planNumber}\nAuthorization: Basic <base64>
+      alt HTTP 2xx, данные нагрузки получены
+        OneC --> App : строки нагрузки одного плана\n(discipline, load, quantity, …)
+      else ошибка / таймаут (120 с на один план)
+        OneC --> App : нет ответа по этому плану
+        note right of App
+          Этот план назван в результате загрузки
+          без нагрузки. Остальные планы работают.
+        end note
+      end
+    end
+  else ошибка / таймаут (600 с)
+    OneC --> App : нет годного ответа
+    note right of App
+      Нагрузка не загружена целиком.
+    end note
+  end
+end
+
+alt Все 5 операций успешны
+  App --> Dispatcher : загрузка «полная»;\nсправочники и нагрузка доступны для составления
+else Часть операций недоступна
+  App --> Dispatcher : загрузка «частичная»;\nнедоступные операции названы;\nпо их данным занятия не размещаются
+end
+
+@enduml
